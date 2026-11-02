@@ -90,6 +90,79 @@ defmodule LiquidKernel.Router do
     end
   end
 
+  post "/api/v1/agent/:id/campaign/start" do
+    track_id = Map.get(conn.body_params, "track_id", "prompt_optimization")
+    max_iterations = Map.get(conn.body_params, "max_iterations", 5)
+
+    try do
+      {:ok, campaign} = AgentActor.start_campaign(id, track_id, max_iterations)
+      send_json(conn, 201, %{status: "started", campaign: campaign})
+    catch
+      :exit, _ ->
+        send_json(conn, 404, %{error: "Agent not found"})
+    end
+  end
+
+  post "/api/v1/agent/:id/stage/evaluate" do
+    stage = Map.get(conn.body_params, "stage", "screening")
+    stage_result = %{
+      passed: Map.get(conn.body_params, "passed", true),
+      score: Map.get(conn.body_params, "score", 1.0)
+    }
+
+    try do
+      {:ok, entry} = AgentActor.evaluate_stage(id, stage, stage_result)
+      send_json(conn, 200, %{status: "recorded", stage_evaluation: entry})
+    catch
+      :exit, _ ->
+        send_json(conn, 404, %{error: "Agent not found"})
+    end
+  end
+
+  get "/api/v1/agent/:id/champion" do
+    try do
+      state = AgentActor.get_state(id)
+      send_json(conn, 200, %{champion: state.champion, rollback_available: length(state.rollback_stack) > 0})
+    catch
+      :exit, _ ->
+        send_json(conn, 404, %{error: "Agent not found"})
+    end
+  end
+
+  post "/api/v1/agent/:id/champion/promote" do
+    proposal = Map.get(conn.body_params, "proposal", %{})
+    metrics = %{
+      score: Map.get(conn.body_params, "score", 0.95),
+      latency_delta_us: Map.get(conn.body_params, "latency_delta_us", -40),
+      token_savings: Map.get(conn.body_params, "token_savings", 22)
+    }
+
+    try do
+      {:ok, :promoted, champion} = AgentActor.promote_champion(id, proposal, metrics)
+      send_json(conn, 200, %{status: "promoted", champion: champion})
+    catch
+      :exit, _ ->
+        send_json(conn, 404, %{error: "Agent not found"})
+    end
+  end
+
+  post "/api/v1/agent/:id/champion/rollback" do
+    reason = Map.get(conn.body_params, "reason", "Operator requested rollback")
+
+    try do
+      case AgentActor.rollback_champion(id, reason) do
+        {:ok, :rolled_back, previous} ->
+          send_json(conn, 200, %{status: "rolled_back", champion: previous})
+
+        {:error, :no_previous_champion} ->
+          send_json(conn, 400, %{error: "No previous champion available to rollback to"})
+      end
+    catch
+      :exit, _ ->
+        send_json(conn, 404, %{error: "Agent not found"})
+    end
+  end
+
   match _ do
     send_json(conn, 404, %{error: "Endpoint not found"})
   end

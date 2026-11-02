@@ -21,7 +21,7 @@ Temporary Items
 Cargo.lock.backup
 
 # Go
-bin/
+orchestrator/bin/
 *.exe
 *.test
 *.out
@@ -87,3 +87,4 @@ erl_crash.dump
 # Temporary & Cache
 tmp/
 .cache/
+.liquid/

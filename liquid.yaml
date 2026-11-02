@@ -1,0 +1,44 @@
+version: "1.1.0"
+project:
+  name: "liquid-harness"
+  description: "Ephemeral micro-kernel agent infrastructure with regularized self-improvement"
+  root: "."
+
+microkernel:
+  elixir_gateway: "http://127.0.0.1:4000"
+  rust_critic: "127.0.0.1:50051"
+  go_registry: "127.0.0.1:50052"
+  bun_sandbox: "http://127.0.0.1:50053"
+  python_optimizer: "http://127.0.0.1:50054"
+
+tracks:
+  - id: "prompt_optimization"
+    name: "Prompt Footprint Optimization"
+    target_component: "prompt"
+    benchmark_adapter: "agent_eval"
+    generator: "failure_summary"
+    policy:
+      screening_min_score: 1.0
+      validation_min_win: 0.05
+      min_stability_threshold: 0.85
+      confidence_level: 0.95
+
+  - id: "tool_synthesis"
+    name: "Dynamic Tool Evolution"
+    target_component: "tool"
+    benchmark_adapter: "bun_test"
+    generator: "template"
+    policy:
+      screening_min_score: 1.0
+      validation_min_win: 0.02
+      min_stability_threshold: 0.80
+
+  - id: "security_hardening"
+    name: "Zero-Trust Security Barrier"
+    target_component: "guardrail"
+    benchmark_adapter: "generic_command"
+    generator: "template"
+    policy:
+      screening_min_score: 1.0
+      validation_min_win: 0.0
+      min_stability_threshold: 0.90
