@@ -1,6 +1,10 @@
 .PHONY: all check check-rust check-go check-python check-bun check-elixir test build clean help
 
-all: check test
+all: check test simulate
+
+simulate:
+	@echo "==> Running 5-Phase Liquid Harness lifecycle simulation..."
+	bun bin/liquid.ts simulate
 
 check: check-rust check-go check-python check-bun check-elixir
 	@echo "==> All polyglot workspace checks passed successfully."
