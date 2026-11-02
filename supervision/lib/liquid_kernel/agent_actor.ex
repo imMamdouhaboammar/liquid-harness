@@ -42,6 +42,7 @@ defmodule LiquidKernel.AgentActor do
     }
   ]
 
+  @derive Jason.Encoder
   defstruct [
     :agent_id,
     :phase,
