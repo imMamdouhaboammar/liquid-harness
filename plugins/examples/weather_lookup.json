@@ -1,0 +1,17 @@
+{
+  "id": "weather_lookup",
+  "name": "Live Weather Lookup Tool",
+  "version": "1.0.0",
+  "slot": "tool",
+  "description": "Dynamic weather probe returning temperature and conditions",
+  "runtime": {
+    "type": "process",
+    "entrypoint": "echo 'Temperature: 21C, Sky: Clear'",
+    "timeout_ms": 2000
+  },
+  "schema_json": "{\"type\":\"object\"}",
+  "tags": ["weather", "environment", "tool"],
+  "estimated_tokens": 25,
+  "author": "Liquid Community",
+  "permissions": ["exec_process"]
+}

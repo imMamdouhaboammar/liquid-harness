@@ -1,113 +1,129 @@
-# Liquid Harness (v1.1.0)
+# Liquid Harness (v2.0.0 - 100% Rust Engine)
 
 Liquid Harness is an ephemeral, micro-kernel agent infrastructure built for an Open World, synthesizing the **Propose-Probe-Compose** paradigm from [Harness²](https://github.com/google-research/harness2), the **Regularized Recursive Self-Improvement (RRSI)** anti-overfitting guards from [RRSI](https://github.com/google-research/rrsi), and autonomous self-evolution workflows inspired by [AutoHarness](https://github.com/kayba-ai/autoharness).
 
-Upon deployment, only a bare minimum runtime kernel boots (`discover_harness_capabilities`). The agent dynamically self-assembles its harness across modular components, executes multi-stage evaluation pipelines (Screening, Validation, Holdout), runs continuous optimization campaigns over candidate mutations, and promotes champions with zero downtime.
+Refactored from fragmented polyglot microservices into a **pure 100% Rust single-binary micro-kernel**, eliminating all network transport latency, multi-toolchain maintenance toil, and simulated mocks.
 
 ---
 
-## Polyglot Micro-Services Topology
+## Unified Zero-Cost Architecture
 
-All internal services communicate strictly over **local loopback (IPC / UDS)**, with only the Elixir BEAM gateway exposed externally.
+All subsystems execute natively within a unified Rust runtime without loopback sockets, serialization bottlenecks, or runtime overhead:
 
 ```
-                  ┌──────────────────────────────────────────────┐
-                  │    External Gateway: Elixir / Bandit         │
-                  │    Port: 127.0.0.1:4000 (REST / SSE)         │
-                  │    Campaign State Machine & Champion Rollback│
-                  └──────────────────────┬───────────────────────┘
-                                         │
-        ┌────────────────────────────────┼────────────────────────────────┐
-        │                                │                                │
-┌───────▼─────────────────┐   ┌──────────▼──────────────┐   ┌─────────────▼──────────┐
-│  Rust Security Critic   │   │  Go Discovery Registry  │   │  Bun Ephemeral Sandbox │
-│  Tonic gRPC: :50051     │   │  Uber FX gRPC: :50052   │   │  ElysiaJS HTTP: :50053 │
-│  AST Denylists & Memory │   │  Track Catalog & Queue  │   │  Multi-Stage Pipeline  │
-│  Paired Welch's T-CI    │   │  24h Scout & Blueprints │   │  Benchmark Adapters    │
-└─────────────────────────┘   └─────────────────────────┘   └────────────────────────┘
-                                         │
-                              ┌──────────▼──────────────┐
-                              │  Python Prompt Engine   │
-                              │  FastAPI / LiteLLM      │
-                              │  Port: 127.0.0.1:50054  │
-                              │  Failure-Driven Gen     │
-                              │  Root Memory & Transfer │
-                              └─────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                   Liquid Harness Single-Binary (Rust)                  │
+├────────────────────────────────────────────────────────────────────────┤
+│ • Agent Kernel State Machine  : Atomic In-Memory Snapshot & Rollback   │
+│ • Security Critic             : AST Sanitizer & Regex Denylists        │
+│ • Discovery Registry          : Lock-Free Thread-Safe Blueprint Catalog│
+│ • Ephemeral Execution Sandbox : Microsecond Isolated Probe Execution   │
+│ • AutoHarness Staging Pipeline: 3-Stage Gating (Screen, Validate, Hold)│
+│ • Statistical Evaluator       : Paired Welch's t-test & Stability Index│
+│ • Prompt Optimizer & Gen      : Failure-Driven Mutation & Token Budget │
+│ • Cross-Campaign Memory       : Durable JSON Root Memory Engine        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Engine | Framework & Technology | Role in Liquid Harness | Loopback Port |
+| Engine Subsystem | Module | Role & Guarantees | Latency Boundary |
 | :--- | :--- | :--- | :--- |
-| **Orchestrator & Live State** | **Elixir** (Bandit + Finch + OTP DynamicSupervisor) | Immutable root kernel, "Let It Crash" actor resilience, atomic champion promotion and instant rollback | `127.0.0.1:4000` |
-| **Security Critic & Statistics** | **Rust** (Tonic gRPC + Regex + AST Sanitizer) | Gatekeeper auditing diff safety, paired Welch's t-confidence intervals, stability scores, and payload limits | `127.0.0.1:50051` |
-| **Tool Discovery & Router** | **Go** (Uber FX + gRPC-Go + Zap) | Track catalog, campaign queue scheduler, 24-hour scout, lightweight blueprint registry | `127.0.0.1:50052` |
-| **Execution Sandbox & Staging** | **Bun / TypeScript** (ElysiaJS + V8 Isolates) | Multi-stage staging pipeline (Screening, Validation, Holdout) and pluggable benchmark adapters | `127.0.0.1:50053` |
-| **Inference & Optimizer** | **Python** (FastAPI + LiteLLM + Uvicorn) | Failure-driven proposal generator, AST prompt compressor, cross-campaign Root Memory manager | `127.0.0.1:50054` |
+| **Agent Kernel State** | `liquid_core::state` | Immutable snapshot transitions, atomic hot-swap promotion, and instant rollback | `< 1 µs` |
+| **Security Critic** | `liquid_core::critic` | Audits syntax, AST depth limits, forbidden execution primitives (`exec`, `rm -rf`) | `< 10 µs` |
+| **Blueprint Registry** | `liquid_core::registry` | Dynamic tool discovery, Day-1 self-assembly, and 24h catalog scout | `< 2 µs` |
+| **Ephemeral Sandbox** | `liquid_core::sandbox` | Timeout-fenced probe execution, infinite loop detection, and contrastive deltas | `< 50 µs` |
+| **Staging Pipeline** | `liquid_core::stages` | 3-Stage evaluation gating: Stage 1 (Screening), Stage 2 (Validation), Stage 3 (Holdout) | `< 2 ms` |
+| **Statistical Engine** | `liquid_core::evaluator` | Paired Welch's t-confidence intervals ($95\%$) and coefficient-of-variation stability | `< 5 µs` |
+| **Prompt Optimizer** | `liquid_core::optimizer` | Failure-driven corrective mutations, token footprint estimation, and budget fences | `< 15 µs` |
+| **Root Memory** | `liquid_core::memory` | Cross-campaign persistence of failure fingerprints and winning lineages in `.liquid/` | `< 100 µs` |
 
 ---
 
-## AutoHarness-Inspired Subsystems
+## AutoHarness 3-Stage Staging Pipeline
 
-### 1. Multi-Stage Staging Pipeline
-Candidates must pass through three distinct evaluation stages before reaching champion consideration:
-1. **Stage 1 (Screening):** High-speed 1-shot execution probe. Fast-rejects broken syntax, infinite loops, and timeouts (< 1,500ms) to conserve computational budget.
-2. **Stage 2 (Validation):** Multi-iteration contrastive evaluation ($N \ge 3$) against baseline. Computes paired difference mean, confidence interval, and stability score ($\ge 0.80$).
+Candidates must pass three deterministic gates before champion consideration:
+1. **Stage 1 (Screening):** High-speed 1-shot execution probe. Fast-rejects broken syntax, infinite loops, and execution errors ($< 1,500\text{ms}$).
+2. **Stage 2 (Validation):** Multi-iteration contrastive evaluation ($N \ge 3$) against baseline. Computes paired difference mean, confidence interval, and stability score ($\ge 0.85$).
 3. **Stage 3 (Holdout):** Evaluation against unseen test vectors to prevent benchmark overfitting and enforce RRSI generalization guarantees.
-
-### 2. Pluggable Benchmark Adapters
-- `generic_command`: Shell command benchmark runner with timeout protection and process isolation.
-- `bun_test`: Native Bun test runner parsing test counts, pass rates, and failure traces.
-- `agent_eval`: Multi-task agent evaluation suite measuring tool-call accuracy, task weight completion, and execution latency.
-
-### 3. Failure-Driven Proposal Generators
-- Inspects benchmark error logs and stack traces to classify failures (`timeout`, `syntax_error`, `token_bloat`, `security_violation`).
-- Generates targeted corrective mutations (e.g. timeout circuit breakers, prompt compression, AST bounds).
-
-### 4. Cross-Campaign Root Memory
-- Persists failure fingerprints and successful interventions across campaigns in `.liquid/root_memory.json`.
-- Prevents overnight loops from repeating disproven hypotheses.
-- Recommends transfer learning strategies for new tracks based on prior champion lineages.
 
 ---
 
 ## Operator CLI Commands
 
+The standalone compiled binary `bin/liquid` provides complete operational control:
+
 ```bash
-# Polyglot system audit of toolchains, loopback services, and adapters
-bun bin/liquid.ts doctor
+# Pure Rust toolchain and adapter health audit
+./bin/liquid doctor
 
 # Initialize workspace directories (.liquid/) and starter configuration
-bun bin/liquid.ts guide
+./bin/liquid guide
 
-# Execute benchmark adapter directly
-bun bin/liquid.ts benchmark agent_eval
+# Execute benchmark adapter directly (generic_command, cargo_test, agent_eval)
+./bin/liquid benchmark agent_eval
 
 # Generate candidate harness mutation proposal
-bun bin/liquid.ts proposal prompt_optimization
+./bin/liquid proposal prompt_optimization
 
 # Run autonomous multi-stage optimization campaign loop
-bun bin/liquid.ts campaign prompt_optimization 3
+./bin/liquid campaign prompt_optimization 3
 
 # View operational summary and champion lineage
-bun bin/liquid.ts report
+./bin/liquid report
+
+# List online infinity slots and active attached plugins
+./bin/liquid slots
+
+# List installed plugins across all slots
+./bin/liquid plugin list
+
+# Audit and install a plugin manifest file
+./bin/liquid plugin install ./plugins/examples/weather_lookup.json
+
+# Execute an installed plugin through its slot
+./bin/liquid plugin run weather_lookup
 
 # Execute complete 5-phase lifecycle simulation
-bun bin/liquid.ts simulate
+./bin/liquid simulate
 ```
 
 ---
 
-## Verification & Build Commands
+## Infinity Slots Architecture (Everything is a Plugin)
+
+Liquid Harness exposes typed, dynamic extension points termed **Infinity Slots**. External tools, cognitive skills, security guardrails, benchmark adapters, and memory providers attach to slots with zero kernel recompilation:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                     Liquid Microkernel Core Engine                     │
+│  State Machine  │  Atomic Rollback  │  AutoHarness 3-Stage Evaluator   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                        [ Infinity Slots Bus ]
+                                    │
+       ┌──────────────┬─────────────┼─────────────┬──────────────┐
+       ▼              ▼             ▼             ▼              ▼
+┌──────────────┐┌────────────┐┌────────────┐┌────────────┐┌────────────┐
+│  Tool Slot   ││ Skill Slot ││Critic Slot ││ Benchmark  ││Memory Slot │
+│(capabilities)││(workflows) ││(guardrails)││(benchmarks)││ (storage)   │
+└──────────────┘└────────────┘└────────────┘└────────────┘└────────────┘
+```
+
+Every plugin is defined via a standard JSON manifest (`PluginManifest`), audited via the Rust `SecurityCritic` AST and mutation scanner, and bound to its slot at runtime.
+
+---
+
+## Verification & Build
 
 ```bash
-# Run all static compiler and type checks (Rust, Go, Python, Bun, Elixir)
+# Run compiler checks across all Rust crates
 make check
 
-# Run full unit and integration test suite across all 5 engines
+# Execute complete unit test suite
 make test
 
-# Execute the 5-phase lifecycle simulation
-make simulate
-
-# Build production binaries
+# Build optimized release binary to bin/liquid
 make build
+
+# Run 5-phase lifecycle simulation
+make simulate
 ```

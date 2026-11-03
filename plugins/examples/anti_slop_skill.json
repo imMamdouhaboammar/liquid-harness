@@ -1,0 +1,17 @@
+{
+  "id": "anti_slop_auditor",
+  "name": "Anti-Slop Cognitive Auditor",
+  "version": "1.0.0",
+  "slot": "skill",
+  "description": "Applies anti-slop engineering constraints to agent thoughts",
+  "runtime": {
+    "type": "prompt",
+    "entrypoint": "[Anti-Slop Audit Filter]: Enforce KISS, DRY, and zero obviousness comments on: {{input}}",
+    "timeout_ms": 1000
+  },
+  "schema_json": "{\"type\":\"object\"}",
+  "tags": ["governance", "skill", "anti-slop"],
+  "estimated_tokens": 40,
+  "author": "Mamdouh Aboammar",
+  "permissions": []
+}

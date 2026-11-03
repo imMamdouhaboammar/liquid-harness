@@ -8,53 +8,26 @@ on:
 
 jobs:
   verify:
-    name: Polyglot Quality Gate
+    name: 100% Rust Quality Gate
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Rust
+      - name: Setup Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Setup Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: '27.x'
-          elixir-version: '1.17.x'
-
-      - name: Install Protoc
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-
-      - name: Install Dependencies
-        run: |
-          cd runtime && bun install
-          cd ../supervision && mix local.hex --force && mix local.rebar --force && mix deps.get
-          cd ../research && uv sync
-
-      - name: Run Static Checks & Linting
+      - name: Static Checks & Compilation
         run: make check
 
-      - name: Run Test Suites
+      - name: Unit & Integration Tests
         run: make test
+
+      - name: Build Release Binary
+        run: make build
 
       - name: Run 5-Phase Mutation Simulation
         run: make simulate

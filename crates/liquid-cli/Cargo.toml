@@ -1,0 +1,20 @@
+[package]
+name = "liquid-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "liquid"
+path = "src/main.rs"
+
+[dependencies]
+liquid-core = { path = "../liquid-core" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+chrono.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

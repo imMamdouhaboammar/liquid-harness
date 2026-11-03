@@ -19,6 +19,7 @@ Temporary Items
 /core/target/
 **/target/
 Cargo.lock.backup
+/bin/liquid
 
 # Go
 orchestrator/bin/

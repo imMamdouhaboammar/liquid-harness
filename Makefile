@@ -1,76 +1,44 @@
-.PHONY: all check check-rust check-go check-python check-bun check-elixir test build clean help
+.PHONY: all check test build simulate clean doctor guide help
 
 all: check test simulate
 
 simulate:
-	@echo "==> Running 5-Phase Liquid Harness lifecycle simulation..."
-	bun bin/liquid.ts simulate
+	@echo "==> Executing 5-Phase Liquid Harness lifecycle simulation (100% Rust)..."
+	./bin/liquid simulate
 
-check: check-rust check-go check-python check-bun check-elixir
-	@echo "==> All polyglot workspace checks passed successfully."
+doctor:
+	@echo "==> Running Liquid Harness micro-kernel doctor..."
+	./bin/liquid doctor
 
-check-rust:
-	@echo "==> Checking Rust core workspace..."
-	cd core && cargo check --all-targets
+guide:
+	@echo "==> Running Liquid Harness workspace onboarding..."
+	./bin/liquid guide
 
-check-go:
-	@echo "==> Checking Go orchestrator..."
-	cd orchestrator && go vet ./...
+check:
+	@echo "==> Checking Rust workspace..."
+	cargo check --all-targets
 
-check-python:
-	@echo "==> Checking Python research workspace..."
-	cd research && uv run python -m py_compile main.py
-
-check-bun:
-	@echo "==> Checking Bun runtime..."
-	cd runtime && bun check
-
-check-elixir:
-	@echo "==> Checking Elixir supervision..."
-	cd supervision && mix compile --warnings-as-errors
-
-test: test-rust test-go test-python test-bun test-elixir
-	@echo "==> All test suites executed."
-
-test-rust:
-	@echo "==> Testing Rust crates..."
-	cd core && cargo test
-
-test-go:
-	@echo "==> Testing Go orchestrator..."
-	cd orchestrator && go test ./...
-
-test-python:
-	@echo "==> Testing Python research workspace..."
-	cd research && uv run python -m unittest discover -s . -p "test_*.py"
-
-test-bun:
-	@echo "==> Testing Bun runtime..."
-	cd runtime && bun test
-
-test-elixir:
-	@echo "==> Testing Elixir supervision..."
-	cd supervision && mix test
+test:
+	@echo "==> Testing 100% Rust workspace..."
+	cargo test
 
 build:
-	@echo "==> Building Rust workspace..."
-	cd core && cargo build
-	@echo "==> Building Go orchestrator..."
-	cd orchestrator && go build -o bin/liquid-d ./cmd/liquid-d
-	@echo "==> Building Elixir OTP application..."
-	cd supervision && mix compile
+	@echo "==> Building release binary..."
+	cargo build --release
+	mkdir -p bin
+	cp target/release/liquid bin/liquid
+	chmod +x bin/liquid
 
 clean:
 	@echo "==> Cleaning build artifacts..."
-	cd core && cargo clean
-	rm -rf orchestrator/bin
-	cd supervision && mix clean
-	rm -rf runtime/node_modules
-	rm -rf research/.venv
+	cargo clean
+	rm -f bin/liquid
 
 help:
-	@echo "Liquid Harness Workspace Commands:"
-	@echo "  make check         - Run static analysis / compiler checks across all 5 stacks"
-	@echo "  make test          - Run unit tests across all 5 stacks"
-	@echo "  make build         - Build core binaries and modules"
-	@echo "  make clean         - Clean temporary build outputs"
+	@echo "Liquid Harness Workspace Commands (100% Rust):"
+	@echo "  make check         - Run static analysis & type checks across Rust crates"
+	@echo "  make test          - Run unit and integration tests"
+	@echo "  make build         - Build optimized release binary in bin/liquid"
+	@echo "  make simulate      - Execute 5-phase lifecycle simulation"
+	@echo "  make doctor        - Audit micro-kernel health and adapters"
+	@echo "  make guide         - Initialize .liquid workspace directories"
